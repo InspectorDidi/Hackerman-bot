@@ -49,7 +49,7 @@ client.on('message', message =>
       //Check for a space to just get the raw command
       var endingIndex = (messageStr.indexOf(' ') > -1) ? messageStr.indexOf(' ') : messageStr.length;
 
-      //String to hold commands
+      //String to hold commands, uses index of 1 to get rid of the '!'
       var command = messageStr.substring(1, endingIndex);
 
       //If it's the clear command, run the clear command funciton
@@ -57,10 +57,40 @@ client.on('message', message =>
       {
         Commands.clearChannel(message);
       }
-      //TODO: Remove, this is a debug method
-      else if(command == "check")
+      else if(command == "steam")
       {
-        Commands.checkSteamSales(announcementChannels);
+        //Gets post command str, uses + 1 to get first letter after the space
+        var postCommandStr = messageStr.substring((endingIndex + 1), messageStr.length);
+
+        //Gets subcommand ending index
+        var subcommandEndIndex = (postCommandStr.indexOf(' ') > -1) ? postCommandStr.indexOf(' ') : postCommandStr.length;
+
+        //Gets subcommand substring
+        var subCommand = postCommandStr.substring(0, subcommandEndIndex);
+
+        if(subCommand == 'add')
+        {
+          //Adds game to watch list, adds original ending index with the subcommand index, then adds 2 to remove space
+          Commands.addGameToWatch(message, (endingIndex + subcommandEndIndex + 2));
+        }
+        else if(subCommand == 'remove')
+        {
+          //Removes game from watch list, adds original ending index with the subcommand index, then adds 2 to remove space
+          Commands.removeGameFromWatch(message, (endingIndex + subcommandEndIndex + 2));
+        }
+        else if(subCommand == 'check')
+        {
+          Commands.checkSteamSales(announcementChannels);
+        }
+        else //If subcommand is not recognized
+        {
+          //Tells message sender that they need s subcommand
+          message.channel.send(`${message.author} You need to specify a valid subcommand`);
+        }
+      }
+      else
+      {
+        message.channel.send(`${command} is not a recognized command!`);
       }
     }
   }

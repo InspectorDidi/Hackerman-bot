@@ -4,6 +4,13 @@ const sleep = require('sleep');
 //File system modules
 const file = require('fs');
 
+//Google search module
+const Google = require('google-search');
+const googleSearch = new Google({
+  key: 'AIzaSyA82oR96OT30gj477qFdlKCMQ5rGs1BChM', //My google API key
+  cx: '005134241128738865876:lrsvq5endtu' //My custom search ID that only searches steam
+});
+
 //Steam module constants
 var SteamApi = require('steam-api');
 const key = '7241A5AB2A7FD2367B7EE558F139A93A';
@@ -41,7 +48,8 @@ module.exports.linkSubreddit = function(message)
   //Substring for the actual subreddit
   var subredditStr = subCutoff.substring(0, endingIndex);
 
-  message.channel.send(`${message.author} OwO, what's this? I see a mention of a subreddit! Here's a link: http://reddit.com/${subredditStr}`);
+  message.channel.send(`${message.author} OwO, what's this? I see a mention of a subreddit!
+    Here's a link: http://reddit.com/${subredditStr}`);
 }
 
 module.exports.getCommandChannels = function(client)
@@ -75,6 +83,7 @@ module.exports.getAnnouncementChannels = function(client)
   //Loops through all channels
   for(var i = 0; i < activeChannels.length; i++)
   {
+    //If the channel is named "announcements" then add it
     if(activeChannels[i].name == "announcements")
     {
       announcementChannels.push(activeChannels[i]);
@@ -84,10 +93,80 @@ module.exports.getAnnouncementChannels = function(client)
   return announcementChannels;
 }
 
+module.exports.addGameToWatch = function(message, gameStartIndex)
+{
+  //Gets name of the game from the message substring
+  var game = message.toString().substring(gameStartIndex, message.toString().length);
+
+  //Does a custom search with the query of the game name, and returns one item
+  googleSearch.build({
+    q: game,
+    num: 1
+  }, function(err, res)
+  {
+    //If there's 0 results
+    if(res.searchInformation.totalResults == 0)
+    {
+      message.channel.send(`That's not a real game ${message.author}, don't be a dingus!`)
+    }
+    else
+    {
+      //Url for the steam game in question
+      var url = res.items[0].link;
+
+      //Cuts off the beginning of the URL to find the next '/'
+      var linkCutoff = url.substring(url.indexOf('/app/') + 5, url.length);
+
+      //Gets the game ID by finding the '/'
+      var gameID = linkCutoff.substring(0, linkCutoff.indexOf('/'));
+
+      console.log(gameID);
+
+      //Writes new ID to file
+      file.appendFile('steamGames.txt', `${gameID} `, function(err){});
+
+      message.channel.send(`${message.author} added ${url} to watch list!`);
+    }
+  });
+}
+
+module.exports.removeGameFromWatch = function(message, gameStartIndex)
+{
+  //Gets name of the game from the message substring
+  var game = message.toString().substring(gameStartIndex, message.toString().length);
+
+  //Does a custom search with the query of the game name, and returns one item
+  googleSearch.build({
+    q: game,
+    num: 1
+  }, function(err, res)
+  {
+    //If there's 0 results
+    if(res.searchInformation.totalResults == 0)
+    {
+      message.channel.send(`That's not a real game ${message.author}, don't be a dingus!`)
+    }
+    else
+    {
+      //Url for the steam game in question
+      var url = res.items[0].link;
+
+      //Cuts off the beginning of the URL to find the next '/'
+      var linkCutoff = url.substring(url.indexOf('/app/') + 5, url.length);
+
+      //Gets the game ID by finding the '/'
+      var gameID = linkCutoff.substring(0, linkCutoff.indexOf('/'));
+
+      console.log(`${linkCutoff} ${linkCutoff.indexOf('/')}`);
+    }
+  });
+}
+
 module.exports.checkSteamSales = function(announcementChannels)
 {
   file.readFile('steamGames.txt', 'utf8', function(err, contents)
   {
+
     //Steam app module
     var app = new SteamApi.App(key);
 
@@ -100,6 +179,9 @@ module.exports.checkSteamSales = function(announcementChannels)
       steamIDs[i] = steamIDs[i].replace("\n", '');
       steamIDs[i] = steamIDs[i].replace(" ", '');
     }
+
+    //There's always an empty item at the end because reasons, so this removes that
+    steamIDs.pop();
 
     //Checks if the games are on sale, if they are it announces it to the server
     for(var i = 0; i < steamIDs.length; i++)
