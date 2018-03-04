@@ -55,3 +55,8 @@ module.exports.getCommandChannels = function(client)
 
   return commandChannels;
 }
+
+module.exports.checkSteamSales() = function()
+{
+  
+}

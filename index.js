@@ -2,6 +2,9 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 
+//Constant for scheduler
+const schedule = require('node-schedule');
+
 //Constant for commands file
 const Commands = require('./commands.js');
 
@@ -15,6 +18,12 @@ client.on('ready', () =>
   //Gets command channels where you put bot commands in
   commandChannels = Commands.getCommandChannels(client);
 });
+
+//Runs at 1800 hours (6:00 PM)
+var steamUpdate = schedule.scheduleJob('0 0 18 * * *', function()
+{
+  checkSteamSales();
+})
 
 //On a message, run this function
 client.on('message', message =>
