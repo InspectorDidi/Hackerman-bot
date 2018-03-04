@@ -163,19 +163,27 @@ module.exports.removeGameFromWatch = function(message, gameStartIndex)
       //Reads steamGames file, and removes the ID from that file
       file.readFile('steamGames.txt', 'utf8', function(err, contents)
       {
-        //Gets starting indexes of the game ID
-        var startIndex = contents.indexOf(gameID);
-        var endIndex = startIndex + gameID.length;
+        //If the game id is on the list
+        if(contents.indexOf(gameID) > -1)
+        {
+          //Gets starting indexes of the game ID
+          var startIndex = contents.indexOf(gameID);
+          var endIndex = startIndex + gameID.length;
 
-        //Gets new string by adding two substrings surrounding the ID
-        var toWrite = contents.substring(0, startIndex - 1) + contents.substring(endIndex, contents.length);
+          //Gets new string by adding two substrings surrounding the ID
+          var toWrite = contents.substring(0, startIndex - 1) + contents.substring(endIndex, contents.length);
 
-        //Writes new string to file
-        file.writeFile('steamGames.txt', toWrite, function(err){});
+          //Writes new string to file
+          file.writeFile('steamGames.txt', toWrite, function(err){});
+
+          //Sends verification message
+          message.channel.send(`${message.author} removed ${url} from watch list`);
+        }
+        else //If not, send a message to the author
+        {
+          message.channel.send(`${message.author} that game was not found in the list`);
+        }
       });
-
-      //Sends verification message
-      message.channel.send(`${message.author} removed ${url} from watch list`);
     }
   });
 }
