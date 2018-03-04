@@ -123,8 +123,6 @@ module.exports.addGameToWatch = function(message, gameStartIndex)
       //Gets the game ID by finding the '/'
       var gameID = linkCutoff.substring(0, linkCutoff.indexOf('/'));
 
-      console.log(gameID);
-
       //Writes new ID to file
       file.appendFile('steamGames.txt', `${gameID} `, function(err){});
 
