@@ -69,6 +69,7 @@ module.exports.getCommandChannels = function(client)
     }
   }
 
+  //Returns command channel IDs
   return commandChannels;
 }
 
@@ -90,6 +91,7 @@ module.exports.getAnnouncementChannels = function(client)
     }
   }
 
+  //Returns new array
   return announcementChannels;
 }
 
@@ -107,6 +109,7 @@ module.exports.addGameToWatch = function(message, gameStartIndex)
     //If there's 0 results
     if(res.searchInformation.totalResults == 0)
     {
+      //Sends a channel saying there were no results
       message.channel.send(`That's not a real game ${message.author}, don't be a dingus!`)
     }
     else
@@ -125,6 +128,7 @@ module.exports.addGameToWatch = function(message, gameStartIndex)
       //Writes new ID to file
       file.appendFile('steamGames.txt', `${gameID} `, function(err){});
 
+      //Sends verification message
       message.channel.send(`${message.author} added ${url} to watch list!`);
     }
   });
@@ -144,6 +148,7 @@ module.exports.removeGameFromWatch = function(message, gameStartIndex)
     //If there's 0 results
     if(res.searchInformation.totalResults == 0)
     {
+      //Sends a channel saying there were no results
       message.channel.send(`That's not a real game ${message.author}, don't be a dingus!`)
     }
     else
@@ -157,7 +162,22 @@ module.exports.removeGameFromWatch = function(message, gameStartIndex)
       //Gets the game ID by finding the '/'
       var gameID = linkCutoff.substring(0, linkCutoff.indexOf('/'));
 
-      console.log(`${linkCutoff} ${linkCutoff.indexOf('/')}`);
+      //Reads steamGames file, and removes the ID from that file
+      file.readFile('steamGames.txt', 'utf8', function(err, contents)
+      {
+        //Gets starting indexes of the game ID
+        var startIndex = contents.indexOf(gameID);
+        var endIndex = startIndex + gameID.length;
+
+        //Gets new string by adding two substrings surrounding the ID
+        var toWrite = contents.substring(0, startIndex - 1) + contents.substring(endIndex, contents.length);
+
+        //Writes new string to file
+        file.writeFile('steamGames.txt', toWrite, function(err){});
+      });
+
+      //Sends verification message
+      message.channel.send(`${message.author} removed ${url} from watch list`);
     }
   });
 }
@@ -166,7 +186,6 @@ module.exports.checkSteamSales = function(announcementChannels)
 {
   file.readFile('steamGames.txt', 'utf8', function(err, contents)
   {
-
     //Steam app module
     var app = new SteamApi.App(key);
 
