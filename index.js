@@ -8,7 +8,9 @@ const schedule = require('node-schedule');
 //Constant for commands file
 const Commands = require('./commands.js');
 
+//Channels arrays
 var commandChannels = [];
+var announcementChannels = [];
 
 //On ready, output logged in message
 client.on('ready', () =>
@@ -17,12 +19,13 @@ client.on('ready', () =>
 
   //Gets command channels where you put bot commands in
   commandChannels = Commands.getCommandChannels(client);
+  announcementChannels = Commands.getAnnouncementChannels(client);
 });
 
 //Runs at 1800 hours (6:00 PM)
 var steamUpdate = schedule.scheduleJob('0 0 18 * * *', function()
 {
-  checkSteamSales();
+  checkSteamSales(announcementChannels);
 })
 
 //On a message, run this function
@@ -53,6 +56,11 @@ client.on('message', message =>
       if(command == "clear")
       {
         Commands.clearChannel(message);
+      }
+      //TODO: Remove, this is a debug method
+      else if(command == "check")
+      {
+        Commands.checkSteamSales(announcementChannels);
       }
     }
   }
